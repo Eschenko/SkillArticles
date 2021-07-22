@@ -6,10 +6,12 @@ fun String?.indexesOf(
 ): List<Int> {
     var index = 0
     val set = mutableSetOf<Int>()
-    for(i in 0..(this?.length ?:20)){
-        index = this?.indexOf(substr, index +1, ignoreCase) ?: 0
-        set.add(index)
-    }
+    if (this != null) {
+        for (i in 0..this.length) {
+            index = this.indexOf(substr, index + 1, ignoreCase)
+            set.add(index)
+        }
+    }else return listOf<Int>()
     return set.filter { it!= -1 }
 }
 
