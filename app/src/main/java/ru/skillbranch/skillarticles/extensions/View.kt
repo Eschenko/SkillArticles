@@ -2,10 +2,9 @@ package ru.skillbranch.skillarticles.extensions
 
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.marginBottom
-import androidx.core.view.marginLeft
-import androidx.core.view.marginRight
-import androidx.core.view.marginTop
+import androidx.core.view.*
+import androidx.core.widget.NestedScrollView
+import ru.skillbranch.skillarticles.R
 
 fun View.setMarginOptionally(
     left:Int = marginLeft,
@@ -13,6 +12,7 @@ fun View.setMarginOptionally(
     right : Int = marginRight,
     bottom : Int = marginBottom
 ){
-    //TODO implement me
+    val scroll = findViewById<NestedScrollView>(R.id.scroll)
+    scroll.setPadding(left,top, right, bottom)
 }
 
