@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/coordinator_container"
@@ -11,31 +12,30 @@
         android:id="@+id/appbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
+            android:theme="@style/ArticleBarsTheme"
+            style="@style/ArticleToolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            style="@style/ArticleToolbar"
-            android:elevation="4dp"
-            android:theme="@style/ArticleBarsTheme"
-            app:layout_scrollFlags="scroll|enterAlwaysCollapsed"
             app:logo="@drawable/logo_placeholder"
+            app:title="@string/app_name"
             app:subtitle="loading..."
-            app:title="@string/app_name" />
-
+            app:layout_scrollFlags="scroll|enterAlwaysCollapsed"
+            android:elevation="4dp"/>
     </com.google.android.material.appbar.AppBarLayout>
-
     <androidx.core.widget.NestedScrollView
+        android:id="@+id/scroll"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
-        >
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
         <TextView
             android:id="@+id/tv_text_content"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
             android:text="Loading..."/>
     </androidx.core.widget.NestedScrollView>
 
@@ -56,8 +56,9 @@
         android:id="@+id/bottombar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:theme="@style/ArticleBarsTheme"
         android:layout_gravity="bottom"
-        android:elevation="4dp"/>
+        android:theme="@style/ArticleBarsTheme"
+        android:elevation="4dp"
+        app:layout_insetEdge="bottom"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
