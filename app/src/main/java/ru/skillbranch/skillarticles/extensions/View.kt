@@ -12,7 +12,8 @@ fun View.setMarginOptionally(
     right : Int = marginRight,
     bottom : Int = marginBottom
 ){
-    val scroll = findViewById<NestedScrollView>(R.id.scroll)
-    scroll.setPadding(left,top, right, bottom)
+    val param = layoutParams as ViewGroup.MarginLayoutParams
+    param.setMargins(left,top, right, bottom)
+    layoutParams = param
 }
 
