@@ -5,9 +5,10 @@ import android.content.res.Resources
 import android.util.TypedValue
 import androidx.annotation.AttrRes
 import kotlin.properties.ReadOnlyProperty
+import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
-class AttrValue(@AttrRes private val res: Int) : ReadOnlyProperty<Context, Int>{
+class AttrValue(@AttrRes private val res: Int) : ReadWriteProperty<Context, Int> {
     private var _value : Int? = null
     override fun getValue(thisRef: Context, property: KProperty<*>): Int {
         if (_value == null){
@@ -16,6 +17,11 @@ class AttrValue(@AttrRes private val res: Int) : ReadOnlyProperty<Context, Int>{
             else throw Resources.NotFoundException("Resource with id $res not found")
         }
         return _value!!
+    }
+
+    override fun setValue(thisRef: Context, property: KProperty<*>, value: Int) {
+        this._value = value
+
     }
 
 }

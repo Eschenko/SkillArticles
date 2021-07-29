@@ -56,7 +56,6 @@ class RootActivity : AppCompatActivity(), IArticleView {
         setupToolbar()
         setupBottombar()
         setupSubmenu()
-
         viewModel.observeState(this,::renderUi)
         viewModel.observeSubState(
             this,
