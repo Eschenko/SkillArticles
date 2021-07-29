@@ -9,7 +9,7 @@ import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
 class AttrValue(@AttrRes private val res: Int) : ReadWriteProperty<Context, Int> {
-    private var _value : Int? = null
+    private var _value : Int =  res
     override fun getValue(thisRef: Context, property: KProperty<*>): Int {
         if (_value == null){
             val tv = TypedValue()
