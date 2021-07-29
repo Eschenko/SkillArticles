@@ -8,8 +8,8 @@ import kotlin.properties.ReadOnlyProperty
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
-class AttrValue(@AttrRes private val res: Int) : ReadWriteProperty<Context, Int> {
-    private var _value : Int =  res
+class AttrValue(@AttrRes private var res: Int) : ReadWriteProperty<Context, Int> {
+    private var _value : Int? = null
     override fun getValue(thisRef: Context, property: KProperty<*>): Int {
         if (_value == null){
             val tv = TypedValue()
@@ -20,7 +20,7 @@ class AttrValue(@AttrRes private val res: Int) : ReadWriteProperty<Context, Int>
     }
 
     override fun setValue(thisRef: Context, property: KProperty<*>, value: Int) {
-        this._value = value
+        this.res = value
 
     }
 
