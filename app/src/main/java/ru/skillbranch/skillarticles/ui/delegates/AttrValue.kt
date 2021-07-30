@@ -12,10 +12,12 @@ class AttrValue(@AttrRes private val res: Int) : ReadOnlyProperty<Context, Int>{
     override fun getValue(thisRef: Context, property: KProperty<*>): Int {
         if (_value == null){
             val tv = TypedValue()
-            if (thisRef.theme.resolveAttribute(res, tv, true)) _value = tv.data
+            if (thisRef.theme.resolveAttribute(res, tv, true))
+                _value = tv.data
             else throw Resources.NotFoundException("Resource with id $res not found")
-        }
-        return res
+        }else _value =res
+
+        return _value!!
     }
 
 }

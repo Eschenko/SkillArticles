@@ -204,7 +204,7 @@ class RootActivity : AppCompatActivity(), IArticleView {
 
     override fun renderUi(data: ArticleState) {
 
-        delegate.localNightMode =
+        this.getDelegate().setLocalNightMode( AppCompatDelegate.MODE_NIGHT_YES)
             if (data.isDarkMode) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
 
         with(vb.tvTextContent) {
