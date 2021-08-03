@@ -27,6 +27,7 @@ import ru.skillbranch.skillarticles.extensions.setMarginOptionally
 import ru.skillbranch.skillarticles.ui.custom.SearchFocusSpan
 import ru.skillbranch.skillarticles.ui.custom.SearchSpan
 import ru.skillbranch.skillarticles.ui.delegates.AttrValue
+import ru.skillbranch.skillarticles.ui.delegates.AttrValue1
 import ru.skillbranch.skillarticles.ui.delegates.viewBinding
 import ru.skillbranch.skillarticles.viewmodels.*
 
@@ -47,7 +48,7 @@ class RootActivity : AppCompatActivity(), IArticleView {
     val bgColor by AttrValue(R.attr.colorSecondary)
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    val fgColor by AttrValue(R.attr.colorOnSecondary)
+    val fgColor by AttrValue1(R.attr.colorOnSecondary)
 
 
     override fun onCreate(savedInstanceState: Bundle?) {

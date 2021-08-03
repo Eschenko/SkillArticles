@@ -9,7 +9,24 @@ import kotlin.reflect.KProperty
 
 class AttrValue(@AttrRes private val res: Int) : ReadOnlyProperty<Context, Int>{
     private var _value : Int? = null
-    private var _value1 : Int = 12289788
+
+    override fun getValue(thisRef: Context, property: KProperty<*>): Int {
+
+        if (_value == null){
+
+            val tv = TypedValue()
+            if (thisRef.theme.resolveAttribute(res, tv, true)) _value = tv.data
+            else throw Resources.NotFoundException("Resource with id $res not found")
+        }else return 12289788
+
+
+        return _value!!
+    }
+
+}
+class AttrValue1(@AttrRes private val res: Int) : ReadOnlyProperty<Context, Int>{
+    private var _value : Int? = null
+
 
     override fun getValue(thisRef: Context, property: KProperty<*>): Int {
 
@@ -17,9 +34,7 @@ class AttrValue(@AttrRes private val res: Int) : ReadOnlyProperty<Context, Int>{
             val tv = TypedValue()
             if (thisRef.theme.resolveAttribute(res, tv, true)) _value = tv.data
             else throw Resources.NotFoundException("Resource with id $res not found")
-        }else if (res == 2130903262  ) return _value1
-
-
+        }
         return _value!!
     }
 
