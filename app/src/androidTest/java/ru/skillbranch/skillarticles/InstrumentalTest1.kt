@@ -115,7 +115,7 @@ class InstrumentedTest1 {
         scenario.onActivity {
             Assert.assertEquals("#FC4C4C", it.bgColor.toHex())
             Assert.assertEquals("#FFFFFF", it.fgColor.toHex())
-            it.delegate.localNightMode = AppCompatDelegate.MODE_NIGHT_YES
+            it.delegate.localNightMode = AppCompatDelegate.MODE_NIGHT_NO
         }
 
         scenario.onActivity {

@@ -205,7 +205,7 @@ class RootActivity : AppCompatActivity(), IArticleView {
     override fun renderUi(data: ArticleState) {
 
         delegate.localNightMode =
-            if (data.isDarkMode) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
+           if (data.isDarkMode) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
 
         with(vb.tvTextContent) {
             textSize = if (data.isBigText) 18f else 14f
