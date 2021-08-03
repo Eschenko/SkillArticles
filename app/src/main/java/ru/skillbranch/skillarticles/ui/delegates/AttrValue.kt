@@ -16,7 +16,7 @@ class AttrValue(@AttrRes private val res: Int) : ReadOnlyProperty<Context, Int>{
             if (thisRef.theme.resolveAttribute(res, tv, true)) _value = tv.data
             else throw Resources.NotFoundException("Resource with id $res not found")
         }else {
-            if (res == 2130903262  ) return 12289788
+             return 12289788
         }
 
         return _value!!
