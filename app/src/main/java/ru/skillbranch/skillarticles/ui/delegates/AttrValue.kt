@@ -12,7 +12,7 @@ class AttrValue(@AttrRes private val res: Int) : ReadOnlyProperty<Context, Int>{
     private var _value : Int? = null
 
     override fun getValue(thisRef: Context, property: KProperty<*>): Int {
-//AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         if (_value == null){
 
             val tv = TypedValue()
