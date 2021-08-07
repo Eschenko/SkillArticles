@@ -486,5 +486,5 @@ private fun ArticleState.asMap(): Map<String, Any?> = mapOf(
     "author" to author,
     "poster" to poster,
     "content" to content,
-    "reviews" to reviews
+    "reviews" to reviews,
 )

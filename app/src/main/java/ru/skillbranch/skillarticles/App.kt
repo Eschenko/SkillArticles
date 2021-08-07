@@ -19,11 +19,11 @@ class App : Application() {
     }
 
 
-//    override fun onCreate() {
-//        super.onCreate()
-//        AppCompatDelegate.setDefaultNightMode(
-//            if (PrefManager().isDarkMode) AppCompatDelegate.MODE_NIGHT_YES else
-//                AppCompatDelegate.MODE_NIGHT_NO)
-//    }
+    override fun onCreate() {
+        super.onCreate()
+        AppCompatDelegate.setDefaultNightMode(
+            if (PrefManager().isDarkMode) AppCompatDelegate.MODE_NIGHT_YES else
+                AppCompatDelegate.MODE_NIGHT_NO)
+    }
 }
 
