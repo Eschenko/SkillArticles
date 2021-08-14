@@ -57,17 +57,17 @@ class RootActivity : AppCompatActivity(), IArticleView {
         setupToolbar()
         setupBottombar()
         setupSubmenu()
-//        viewModel.observeState(this,::renderUi)
-//        viewModel.observeSubState(
-//            this,
-//            {state:ArticleState ->state.toBottombarData()},
-//            ::renderBotombar
-//        )
-//        viewModel.observeSubState(this, {a: ArticleState-> a.toSubmenuData()}, {renderSubmenu(it)})
-//
-//        viewModel.observeNotifications(this) {
-//            renderNotification(it)
-//        }
+       viewModel.observeState(this,::renderUi)
+        viewModel.observeSubState(
+            this,
+            {state:ArticleState ->state.toBottombarData()},
+            ::renderBotombar
+        )
+        viewModel.observeSubState(this, {a: ArticleState-> a.toSubmenuData()}, {renderSubmenu(it)})
+
+        viewModel.observeNotifications(this) {
+            renderNotification(it)
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
