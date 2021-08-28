@@ -1,5 +1,6 @@
 package ru.skillbranch.skillarticles.markdown
 
+import androidx.core.graphics.green
 import java.util.regex.Pattern
 
 object MarkdownParser {
@@ -18,11 +19,15 @@ object MarkdownParser {
     private const val INLINE_GROUP = "((?<!`)`[^`\\s].*?[^`\\s]?`(?!`))"
     private const val LINK_GROUP = "(\\[[^\\[\\]]*?]\\(.+?\\))"
     private const val ORDERED_LIST_ITEM_GROUP = "(^[1,2].+?\$)"
+    private const val BLOCK_CODE = "((code block.code block.code block)|(multiline code block\n" +
+            "multiline code block\n" +
+            "multiline code block\n" +
+            "multiline code block))"
 
     //result regex
     private const val MARKDOWN_GROUPS = "$UNORDERED_LIST_ITEM_GROUP|$HEADER_GROUP|$QUOTE_GROUP" +
             "|$ITALIC_GROUP|$BOLD_GROUP|$STRIKE_GROUP|$RULE_GROUP|$INLINE_GROUP|$LINK_GROUP" +
-            "|$ORDERED_LIST_ITEM_GROUP"
+            "|$ORDERED_LIST_ITEM_GROUP|$BLOCK_CODE"
 
     private val elementsPattern by lazy { Pattern.compile(MARKDOWN_GROUPS, Pattern.MULTILINE) }
 
@@ -65,7 +70,7 @@ object MarkdownParser {
             var text : CharSequence
 
             //groups range for iterate by groups
-            val groups = 1..10
+            val groups = 1..11
             var group = -1
             for (gr in groups){
                 if (matcher.group(gr)!= null){
@@ -178,6 +183,13 @@ object MarkdownParser {
                     val order = string.subSequence(startIndex, startIndex.plus(2))
                     text = string.substring(startIndex.plus(3), endIndex)
                     val element = Element.OrderedListItem(order.toString(), text)
+                    parents.add(element)
+                    lastStartIndex = endIndex
+                }
+                11 -> {
+                    println("vvvvvvvv")
+                    text = string.subSequence(startIndex, endIndex)
+                    val element = Element.BlockCode(text =text.toString())
                     parents.add(element)
                     lastStartIndex = endIndex
                 }
