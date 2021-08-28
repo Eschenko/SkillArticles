@@ -15,12 +15,14 @@ object MarkdownParser {
         "((?<!\\*)\\*{2}[^*].*?[^*]?\\*{2}(?!\\*)|(?<!_)_{2}[^_].*?[^_]?_{2}(?!_))"
     private const val STRIKE_GROUP = "(~~.+~~$)"
     private const val RULE_GROUP = "(^[-_*]{3}$)"
-    private const val INLINE_GROUP = "((`\\w...`)|(`only inline`))"
+    private const val INLINE_GROUP = "((?<!`)`[^`\\s].*?[^`\\s]?`(?!`))"
     private const val LINK_GROUP = "(\\[[^\\[\\]]*?]\\(.+?\\))"
+    private const val ORDERED_LIST_ITEM_GROUP = "(^[1,2].+?\$)"
 
     //result regex
     private const val MARKDOWN_GROUPS = "$UNORDERED_LIST_ITEM_GROUP|$HEADER_GROUP|$QUOTE_GROUP" +
-            "|$ITALIC_GROUP|$BOLD_GROUP|$STRIKE_GROUP|$RULE_GROUP|$INLINE_GROUP|$LINK_GROUP"
+            "|$ITALIC_GROUP|$BOLD_GROUP|$STRIKE_GROUP|$RULE_GROUP|$INLINE_GROUP|$LINK_GROUP" +
+            "|$ORDERED_LIST_ITEM_GROUP"
 
     private val elementsPattern by lazy { Pattern.compile(MARKDOWN_GROUPS, Pattern.MULTILINE) }
 
@@ -31,6 +33,7 @@ object MarkdownParser {
     fun parse (string: String): MarkdownText{
         val elements = mutableListOf<Element>()
         elements.addAll(findElements(string))
+        println(elements)
         return MarkdownText(elements)
     }
 
@@ -55,14 +58,14 @@ object MarkdownParser {
             val endIndex = matcher.end()
 
             //if something is found then everything before - TEXT
-            if (lastStartIndex < startIndex){
-                parents.add(Element.Text(string.subSequence(lastStartIndex, startIndex)))
-            }
+//            if (lastStartIndex < startIndex){
+//                parents.add(Element.Text(string.subSequence(lastStartIndex, startIndex)))
+//            }
             //found text
             var text : CharSequence
 
             //groups range for iterate by groups
-            val groups = 1..9
+            val groups = 1..10
             var group = -1
             for (gr in groups){
                 if (matcher.group(gr)!= null){
@@ -75,24 +78,28 @@ object MarkdownParser {
                 //NOT FOUND -> break
                 -1 -> break@loop
                 //UNORDERED LIST
-                1->{
+                1 -> {
                     //text without "*."
                     text = string.subSequence(startIndex.plus(2), endIndex)
                     //find inner elements
+                    //println(text)
                     val subs = findElements(text)
                     val element = Element.UnorderedListItem(text, subs)
                     parents.add(element)
+                    println(parents)
                     //next find start from position "endIndex"(last regex character)
                     lastStartIndex = endIndex
                 }
                 //HEADER
-                2 ->{
-                    val reg = "^#{1,6}".toRegex().find(string.subSequence(startIndex,endIndex))
-                    val level  = reg!!.value.length
+                2 -> {
+                    //println("" +startIndex  + "  " +  endIndex)
+                    val reg = "^#{1,6}".toRegex().find(string.subSequence(startIndex, endIndex))
 
+                    val level = reg!!.value.length
+                    //println(reg!!.value)
                     //text without "{#}"
                     text = string.subSequence(startIndex.plus(level.inc()), endIndex)
-
+                    println(text)
                     val element = Element.Header(level, text)
                     parents.add(element)
                     lastStartIndex = endIndex
@@ -165,12 +172,22 @@ object MarkdownParser {
                     lastStartIndex = endIndex
                 }
 
+
+                10 -> {
+                    println(string.substring(startIndex, endIndex))
+                    val order = string.subSequence(startIndex, startIndex.plus(2))
+                    text = string.substring(startIndex.plus(3), endIndex)
+                    val element = Element.OrderedListItem(order.toString(), text)
+                    parents.add(element)
+                    lastStartIndex = endIndex
+                }
+
             }
         }
-        if (lastStartIndex < string.length){
-            val text = string.subSequence(lastStartIndex, string.length)
-            parents.add(Element.Text(text))
-        }
+//        if (lastStartIndex < string.length){
+//            val text = string.subSequence(lastStartIndex, string.length)
+//            parents.add(Element.Text(text))
+//        }
         return parents
     }
 }
