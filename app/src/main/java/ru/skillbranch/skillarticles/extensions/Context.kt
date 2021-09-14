@@ -1,10 +1,28 @@
 package ru.skillbranch.skillarticles.extensions
 
 import android.content.Context
+import android.content.res.Resources
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import android.util.TypedValue
+import androidx.annotation.AttrRes
+import kotlin.reflect.KProperty
+
+
+fun Context.attrValue(@AttrRes res: Int) : Int{
+    var _value : Int? = null
+
+        if (_value == null){
+
+            val tv = TypedValue()
+            if (theme.resolveAttribute(res, tv, true)) _value = tv.data
+            else throw Resources.NotFoundException("Resource with id $res not found")
+        }
+
+        return _value
+
+}
 
 fun Context.dpToPx(dp: Int): Float {
     return TypedValue.applyDimension(

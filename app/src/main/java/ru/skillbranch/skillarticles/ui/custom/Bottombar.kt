@@ -49,7 +49,7 @@ class Bottombar @JvmOverloads constructor(
         if (state is SavedState) {
             isSearchMode = state.ssIsSearchMode
             binding.reveal.isVisible = isSearchMode
-            binding.bottomGroup.isVisible = isSearchMode
+            binding.bottomGroup.isVisible = !isSearchMode
 
         }
 

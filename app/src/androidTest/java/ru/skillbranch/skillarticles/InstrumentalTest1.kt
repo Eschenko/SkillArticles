@@ -1,42 +1,23 @@
 package ru.skillbranch.skillarticles
 
-import android.text.Spannable
-import android.view.View
-import android.widget.TextView
-import androidx.appcompat.app.AppCompatDelegate
-import androidx.appcompat.widget.Toolbar
-import androidx.core.text.getSpans
-import androidx.core.view.marginBottom
-import androidx.core.widget.NestedScrollView
-import androidx.lifecycle.*
-import androidx.test.annotation.UiThreadTest
-import androidx.test.core.app.ActivityScenario
-import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.assertion.ViewAssertions
-import androidx.test.espresso.matcher.BoundedMatcher
-import androidx.test.espresso.matcher.ViewMatchers.*
+import android.graphics.*
+import android.graphics.drawable.VectorDrawable
+import android.text.Layout
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.TextPaint
+import android.util.Log
+import android.view.View.TEXT_DIRECTION_FIRST_STRONG
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
-import androidx.test.runner.lifecycle.Stage
-import com.jraska.livedata.TestObserver
-import com.jraska.livedata.test
 import io.mockk.*
-import org.hamcrest.CoreMatchers.*
-import org.hamcrest.Description
-import org.hamcrest.Matcher
-import org.junit.*
+import junit.framework.Assert.assertEquals
+import org.junit.Assert
+import org.junit.Before
+import org.junit.BeforeClass
+import org.junit.Test
 import org.junit.runner.RunWith
-import org.junit.runners.MethodSorters
-import ru.skillbranch.skillarticles.data.LocalDataHolder
-import ru.skillbranch.skillarticles.data.NetworkDataHolder
-import ru.skillbranch.skillarticles.data.repositories.ArticleRepository
-import ru.skillbranch.skillarticles.extensions.indexesOf
-import ru.skillbranch.skillarticles.extensions.setMarginOptionally
-import ru.skillbranch.skillarticles.ui.RootActivity
-import ru.skillbranch.skillarticles.ui.custom.SearchFocusSpan
-import ru.skillbranch.skillarticles.ui.custom.SearchSpan
-import ru.skillbranch.skillarticles.viewmodels.*
-
+import ru.skillbranch.skillarticles.markdown.spans.*
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -44,447 +25,508 @@ import ru.skillbranch.skillarticles.viewmodels.*
  * See [testing documentation](http://d.android.com/tools/testing).
  */
 
-
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(AndroidJUnit4::class)
-class InstrumentedTest1 {
-    val content =
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas nibh sapien, consectetur et ultrices quis, convallis sit amet augue. Interdum et malesuada fames ac ante ipsum primis in faucibus. Vestibulum et convallis augue, eu hendrerit diam. Curabitur ut dolor at justo suscipit commodo."
-
-    val longContent =
-        """Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas nibh sapien, consectetur et ultrices quis, convallis sit amet augue. Interdum et malesuada fames ac ante ipsum primis in faucibus. Vestibulum et convallis augue, eu hendrerit diam. Curabitur ut dolor at justo suscipit commodo. Curabitur consectetur, massa sed sodales sollicitudin, orci augue maximus lacus, ut elementum risus lorem nec tellus. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Praesent accumsan tempor lorem, quis pulvinar justo. Vivamus euismod risus ac arcu pharetra fringilla.
-                Maecenas cursus vehicula erat, in eleifend diam blandit vitae. In hac habitasse platea dictumst. Duis egestas augue lectus, et vulputate diam iaculis id. Aenean vestibulum nibh vitae mi luctus tincidunt. Fusce iaculis molestie eros, ac efficitur odio cursus ac. In at orci eget eros dapibus pretium congue sed odio. Maecenas facilisis, dolor eget mollis gravida, nisi justo mattis odio, ac congue arcu risus sed turpis.
-                Sed tempor a nibh at maximus."""
-
+class InstrumentalTest1 {
     companion object {
+        var scaledDensity: Float = 0f
+
         @BeforeClass
         @JvmStatic
-        fun setup() {
-
-
-            LocalDataHolder.disableDelay(true)
-            NetworkDataHolder.disableDelay(true)
+        fun setupClass() {
+            scaledDensity =
+                ApplicationProvider.getApplicationContext<App>().resources.displayMetrics.scaledDensity
         }
     }
 
-    @Test(timeout = 30000)
-    fun module1() {
+    //defaults
+    private val defaultColor = Color.GRAY
+    private val currentMargin = 0
+    private val lineTop = 0 //lineTop for line under test
+    private val lineBase = 14.dp() //lineBase for line under test
+    private val lineBottom = 20.dp() //lineBottom for line under test
+    private val defaultFontAscent = (-10).dp() //16sp fontsize
+    private val defaultFontDescent = (4).dp() //16sp fontsize
+    private val canvasWidth = 360.dp()
 
+    //mocks
+    private lateinit var canvas: Canvas
+    private lateinit var paint: Paint
+    private lateinit var layout: Layout
 
-        var actualIndexes = longContent.indexesOf("sed")
-        Assert.assertEquals(listOf(322, 930, 1032, 1060), actualIndexes)
+    //text under test
+    private lateinit var text: SpannableString
 
-        actualIndexes = longContent.indexesOf("sed", false)
-        Assert.assertEquals(listOf(322, 930, 1032), actualIndexes)
+    //overwrite mocks before each test
+    @Before
+    fun setup() {
+        canvas = mockk(relaxed = true) { //overwrite only need functions other functions relaxed
+            every { getWidth() } returns canvasWidth
+        }
+        //Log.d("linklink", canvas.toString())
+        paint = mockk(relaxed = true) {
+            every { getColor() } returns defaultColor
+        }
+        layout = mockk(relaxed = true)
 
-        actualIndexes = longContent.indexesOf("")
-        Assert.assertEquals(listOf<Int>(), actualIndexes)
-
-        actualIndexes = null.indexesOf("")
-        Assert.assertEquals(listOf<Int>(), actualIndexes)
+        text = SpannableString("text")
     }
 
-    @Test(timeout = 30000)
-    fun module2() {
-        val scenario = ActivityScenario.launch(RootActivity::class.java)
-        scenario.onActivity { activity ->
-            val scroll = activity.findViewById<NestedScrollView>(R.id.scroll)
-            Assert.assertEquals(0, scroll.marginBottom)
-            scroll.setMarginOptionally(bottom = 112)
-            Assert.assertEquals(112, scroll.marginBottom)
-        }
+    @Test
+    fun unordered_list() {
+        //settings
+        val color = Color.RED
+        val gap = 8.dpf()
+        val radius = 4.dpf()
 
-        scenario.close()
-    }
+        //set span on text
+        val span = UnorderedListSpan(gap, radius, color)
+        text.setSpan(span, 0, 0, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
 
-
-    @Test(timeout = 30000)
-    fun module3() {
-        val mockVm = mockk<ArticleViewModel>(relaxed = true, relaxUnitFun = true) {
-            every { currentState } returns ArticleState()
-        }
-
-        ActivityLifecycleMonitorRegistry.getInstance().addLifecycleCallback { activity, stage ->
-            if (stage == Stage.PRE_ON_CREATE) {
-                (activity as RootActivity).viewModelFactory = createViewModelFor(mockVm)
-            }
-        }
-
-        val scenario = ActivityScenario.launch(RootActivity::class.java)
-
-        scenario.onActivity {
-            Assert.assertEquals("#FC4C4C", it.bgColor.toHex())
-            Assert.assertEquals("#FFFFFF", it.fgColor.toHex())
-            it.delegate.localNightMode = AppCompatDelegate.MODE_NIGHT_YES
-        }
-
-        scenario.onActivity {
-            Assert.assertEquals("#BB86FC", it.bgColor.toHex())
-            Assert.assertEquals("#FFFFFF", it.fgColor.toHex())
-        }
-
-        scenario.close()
-    }
+        //check leading margin
+        assertEquals((4 * radius + gap).toInt(), span.getLeadingMargin(true))
 
 
-    @Test(timeout = 30000)
-    fun module4() {
-        val mockVm = mockk<ArticleViewModel>(relaxed = true, relaxUnitFun = true) {
-            every { currentState } returns ArticleState()
-        }
-
-        ActivityLifecycleMonitorRegistry.getInstance().addLifecycleCallback { activity, stage ->
-            if (stage == Stage.PRE_ON_CREATE) {
-                (activity as RootActivity).viewModelFactory = createViewModelFor(mockVm)
-            }
-            println(stage)
-        }
-
-        val scenario = ActivityScenario.launch(RootActivity::class.java)
-
-        scenario.onActivity { activity ->
-            activity.renderSubmenu(
-                ArticleState(
-                    isShowMenu = true,
-                    isBigText = true,
-                    isDarkMode = true
-                ).toSubmenuData()
-            )
-        }
-
-        onView(withId(R.id.submenu)).check(ViewAssertions.matches(isDisplayed()))
-        onView(withId(R.id.btn_text_up)).check(ViewAssertions.matches(isChecked()))
-        onView(withId(R.id.switch_mode)).check(ViewAssertions.matches(isChecked()))
-
-        scenario.onActivity { activity ->
-            activity.renderBotombar(
-                ArticleState(
-                    isBookmark = true,
-                    isLike = true
-                ).toBottombarData()
-            )
-        }
-
-        onView(withId(R.id.btn_like)).check(ViewAssertions.matches(isChecked()))
-        onView(withId(R.id.btn_bookmark)).check(ViewAssertions.matches(isChecked()))
-
-        scenario.onActivity { activity ->
-            activity.renderBotombar(
-                BottombarData(
-                    isSearch = true,
-                    resultsCount = 4,
-                    searchPosition = 3
-                )
-            )
-        }
-
-        onView(withId(R.id.bottom_group)).check(ViewAssertions.matches(not(isDisplayed())))
-        onView(withId(R.id.reveal)).check(ViewAssertions.matches(isDisplayed()))
-        onView(withId(R.id.tv_search_result)).check(ViewAssertions.matches(withText("4 of 4")))
-        onView(withId(R.id.btn_result_up)).check(ViewAssertions.matches(isEnabled()))
-        onView(withId(R.id.btn_result_down)).check(ViewAssertions.matches(not(isEnabled())))
-
-        scenario.onActivity { activity ->
-            activity.renderBotombar(
-                BottombarData(
-                    isSearch = true,
-                    resultsCount = 0,
-                    searchPosition = 0
-                )
-            )
-        }
-
-        onView(withId(R.id.tv_search_result)).check(ViewAssertions.matches(withText("Not found")))
-        onView(withId(R.id.btn_result_up)).check(ViewAssertions.matches(not(isEnabled())))
-        onView(withId(R.id.btn_result_down)).check(ViewAssertions.matches(not(isEnabled())))
-
-        scenario.onActivity { activity ->
-            activity.renderUi(
-                ArticleState(
-                    content = listOf(content),
-                    isBigText = true,
-                    isLoadingContent = false,
-                    title = "test title",
-                    category = "test category"
-                )
-            )
-        }
-
-        onView(withId(R.id.tv_text_content)).check(ViewAssertions.matches(withFontSize(18f)))
-        onView(withId(R.id.tv_text_content)).check(ViewAssertions.matches(withText(content)))
-        onView(withId(R.id.toolbar)).check(ViewAssertions.matches(withToolbarTitle("test title")))
-        onView(withId(R.id.toolbar)).check(ViewAssertions.matches(withToolbarSubtitle("test category")))
-
-
-        scenario.onActivity { activity ->
-            activity.renderSearchResult(listOf(0 to 10, 20 to 30, 40 to 50))
-            activity.renderSearchPosition(1)
-        }
-
-        onView(withId(R.id.tv_text_content)).check(ViewAssertions.matches(withText(content)))
-        onView(withId(R.id.tv_text_content)).check(
-            ViewAssertions.matches(
-                withSearchResult(
-                    listOf(
-                        0 to 10,
-                        20 to 30,
-                        40 to 50
-                    )
-                )
-            )
+        //bullet draw
+        span.drawLeadingMargin(
+            canvas, paint, currentMargin, TEXT_DIRECTION_FIRST_STRONG,
+            lineTop, lineBase, lineBottom, text, 0, text.length,
+            true, layout
         )
-        onView(withId(R.id.tv_text_content)).check(ViewAssertions.matches(withSearchPosition(1)))
 
-        scenario.onActivity { activity ->
-            activity.clearSearchResult()
-        }
-
-        onView(withId(R.id.tv_text_content)).check(ViewAssertions.matches(withSearchResult(emptyList())))
-
-        scenario.close()
-    }
-
-    @Test(timeout = 30000)
-    @UiThreadTest
-    fun module5() {
-        val initialState =
-            ArticleState(isLoadingContent = false, content = listOf(content), isShowMenu = true, isSearch = false)
-        val vm = ArticleViewModel("0", SavedStateHandle())
-
-        vm.state.value = initialState
-
-        val testObs = vm.state.test()
-
-        vm.handleSearchMode(true)
-
-        testObs
-            .awaitValue()
-            .assertValue(
-                "handleSearchMode",
-                mapOf("isSearch" to true, "isShowMenu" to false, "searchPosition" to 0),
-                ArticleState::asMap
+        //check order call
+        verifyOrder {
+            //check first set color to paint
+            paint.color = color
+            //check draw circle bullet
+            canvas.drawCircle(
+                gap + currentMargin + radius,
+                (lineTop + lineBottom) / 2f,
+                radius, paint
             )
-
-        vm.handleSearch("lorem")
-
-        testObs
-            .assertValue(
-                "handleSearch",
-                mapOf("isSearch" to true, "searchPosition" to 0, "searchQuery" to "lorem", "searchResults" to listOf(0 to 5)),
-                ArticleState::asMap
-            )
-
-        vm.handleDownResult()
-        vm.handleDownResult()
-
-        testObs
-            .assertValue(
-                "handleUpResult",
-                mapOf("searchPosition" to 2),
-                ArticleState::asMap
-            )
-
-        vm.handleUpResult()
-
-        testObs
-            .assertValue(
-                "handleDownResult",
-                mapOf("searchPosition" to 1),
-                ArticleState::asMap
-            )
-
-        vm.handleSearchMode(false)
-
-        testObs
-            .assertValue(
-                "handleSearchMode false (reset state)",
-                mapOf("searchPosition" to 0, "isShowMenu" to false, "searchPosition" to 0),
-                ArticleState::asMap
-            )
-    }
-
-    private fun Int.toHex(): String = String.format("#%06X", 0xFFFFFF and this)
-
-    private fun withFontSize(expectedSize: Float): Matcher<View> {
-        return object : BoundedMatcher<View, View>(TextView::class.java) {
-
-            var actSize: Float? = null
-
-            public override fun matchesSafely(target: View): Boolean {
-                if (target !is TextView) return false
-                val pixels = target.textSize
-                val actualSize = pixels / target.getResources().displayMetrics.scaledDensity
-                actSize = actualSize
-                return actualSize == expectedSize
-            }
-
-            override fun describeTo(description: Description) {
-                if (actSize == null) {
-                    description.appendText("with fontSize, expected fontSize : ")
-                    description.appendValue(expectedSize)
-                } else {
-                    description.appendText("with fontSize, actual fontSize : ")
-                    description.appendValue(actSize)
-                    description.appendText(" expected fontSize : ")
-                    description.appendValue(expectedSize)
-                }
-
-            }
+            //check paint color restore
+            paint.color = defaultColor
         }
     }
 
-    private fun withSearchResult(searchResult: List<Pair<Int, Int>>): Matcher<View> {
-        return object : BoundedMatcher<View, View>(TextView::class.java) {
-            var actPositions: List<Pair<Int, Int>>? = null
+    @Test
+    fun ordered_list() {
+        //settings
+        val color = Color.RED
+        val gap = 12.dpf()
+        val order = "1"
 
-            public override fun matchesSafely(target: View): Boolean {
-                if (target !is TextView) return false
-                if (target.text !is Spannable) return false
-                val content = target.text as Spannable
-                val searchSpans = content.getSpans<SearchSpan>()
-                    .filter { it !is SearchFocusSpan }
-                val spansPositions =
-                    searchSpans.map { content.getSpanStart(it) to content.getSpanEnd(it) }
-                actPositions = spansPositions
-                return searchResult == spansPositions
-            }
+        //set span on text
+        val span = OrderedListSpan(gap, order, color)
+        text.setSpan(span, 0, text.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
 
-            override fun describeTo(description: Description) {
-                if (actPositions == null) {
-                    description.appendText("with search result, expected spans positions:  ")
-                    description.appendValue(searchResult)
-                } else {
-                    description.appendText("with search result, actual spans positions:  ")
-                    description.appendValue(actPositions)
-                    description.appendText(" expected spans positions : ")
-                    description.appendValue(searchResult)
-                }
-            }
-        }
-    }
+        //check leading margin
+        Assert.assertEquals((order.length.inc() * gap).toInt(), span.getLeadingMargin(true))
 
-    private fun withSearchPosition(position: Int): Matcher<View> {
-        return object : BoundedMatcher<View, View>(TextView::class.java) {
-            var actPosition: Int? = null
-
-            public override fun matchesSafely(target: View): Boolean {
-                if (target !is TextView) return false
-                if (target.text !is Spannable) return false
-
-                val content = target.text as Spannable
-                val searchSpans = content.getSpans<SearchSpan>()
-                    .filter { it !is SearchFocusSpan }
-                    .map { content.getSpanStart(it) to content.getSpanEnd(it) }
-
-                val focusSpan = content.getSpans<SearchFocusSpan>()
-                    .map { content.getSpanStart(it) to content.getSpanEnd(it) }
-                    .firstOrNull()
-
-                actPosition = searchSpans.indexOfFirst { it == focusSpan }
-                return actPosition == position
-            }
-
-            override fun describeTo(description: Description) {
-                if (actPosition == null) {
-                    description.appendText("with search position, expected search focus span position: ")
-                    description.appendValue(position)
-                } else {
-                    description.appendText("with search position, actual search focus span position : ")
-                    description.appendValue(actPosition)
-                    description.appendText(" expected search focus span position : ")
-                    description.appendValue(position)
-                }
-            }
-        }
-    }
-
-}
-
-fun withToolbarTitle(textMatcher: Matcher<CharSequence?>): Matcher<View?>? {
-    return object : BoundedMatcher<View?, Toolbar>(Toolbar::class.java) {
-        override fun matchesSafely(toolbar: Toolbar): Boolean {
-            return textMatcher.matches(toolbar.title)
-        }
-
-        override fun describeTo(description: Description) {
-            description.appendText("with toolbar title: ")
-            textMatcher.describeTo(description)
-        }
-    }
-}
-
-
-fun withToolbarSubtitle(textMatcher: Matcher<CharSequence?>): Matcher<View?>? {
-    return object : BoundedMatcher<View?, Toolbar>(Toolbar::class.java) {
-        override fun matchesSafely(toolbar: Toolbar): Boolean {
-            return textMatcher.matches(toolbar.subtitle)
-        }
-
-        override fun describeTo(description: Description) {
-            description.appendText("with toolbar title: ")
-            textMatcher.describeTo(description)
-        }
-    }
-}
-
-fun withToolbarTitle(title: CharSequence?): Matcher<View?>? {
-    return withToolbarTitle(`is`(title))
-}
-
-fun withToolbarSubtitle(title: CharSequence?): Matcher<View?>? {
-    return withToolbarSubtitle(`is`(title))
-}
-
-
-fun <T : ViewModel> createViewModelFor(model: T): ViewModelProvider.Factory =
-    object : ViewModelProvider.Factory {
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(model.javaClass)) {
-                return model as T
-            }
-            throw IllegalArgumentException("unexpected model class " + modelClass)
-        }
-
-    }
-
-
-private fun <T> TestObserver<T>.assertValue(
-    description: String = "",
-    expectedMap: Map<String, Any?>,
-    transform: ((T) -> Map<String, Any?>)
-): TestObserver<T> {
-    val actual = transform(value())
-    expectedMap.forEach { (k, v) ->
-        Assert.assertEquals(
-            "$description property: $k",
-            v,
-            actual[k]
+        //check bullet draw
+        span.drawLeadingMargin(
+            canvas, paint, currentMargin, TEXT_DIRECTION_FIRST_STRONG,
+            lineTop, lineBase, lineBottom, text, 0, text.length,
+            true, layout
         )
+
+        //check order call
+        verifyOrder {
+            //check first set color to paint
+            paint.color = color
+
+            //check draw order bullet
+            canvas.drawText(
+                order,
+                currentMargin + gap,
+                lineBase.toFloat(),
+                paint
+            )
+
+            //check paint color restore
+            paint.color = defaultColor
+        }
     }
-    return this
+
+    @Test
+    fun draw_quote() {
+        //settings
+        val color = Color.RED
+        val gap = 8.dpf()
+        val lineWidth = 4.dpf()
+
+        val span = BlockquotesSpan(gap, lineWidth, color)
+        text.setSpan(span, 0, 0, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+
+        //check leading margin
+        assertEquals((lineWidth + gap).toInt(), span.getLeadingMargin(true))
+
+        //check line draw
+        span.drawLeadingMargin(
+            canvas, paint, currentMargin, TEXT_DIRECTION_FIRST_STRONG,
+            lineTop, lineBase, lineBottom, text, 0, text.length,
+            true, layout
+        )
+
+        //check order call
+        verifyOrder {
+            //check first set color to painyt
+            paint.color = color
+            paint.strokeWidth = lineWidth
+            //check draw line
+            canvas.drawLine(
+                lineWidth / 2f,
+                lineTop.toFloat(),
+                lineWidth / 2,
+                lineBottom.toFloat(),
+                paint
+            )
+
+            //check paint color restore
+            paint.color = defaultColor
+        }
+
+    }
+
+    @Test
+    fun draw_header() {
+        //settings
+        val levels = 1..6
+        val textColor = Color.RED
+        val lineColor = Color.GREEN
+        val marginTop = 12.dpf()
+        val marginBottom = 8.dpf()
+
+        //mocks
+        val measurePaint = mockk<TextPaint>(relaxed = true)
+        val drawPaint = mockk<TextPaint>(relaxed = true)
+        val fm = Paint.FontMetricsInt()
+
+        for (level in levels) {
+
+            val span = HeaderSpan(level, textColor, lineColor, marginTop, marginBottom)
+            text.setSpan(span, 0, text.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+
+            //check leading margin
+            assertEquals(0, span.getLeadingMargin(true))
+
+            //check measure state
+            span.updateMeasureState(measurePaint)
+            verifyAll {
+                measurePaint.textSize *= span.sizes[level]!!
+                measurePaint.isFakeBoldText = true
+            }
+
+            //check draw state
+            span.updateDrawState(drawPaint)
+            verifyAll {
+                drawPaint.textSize *= span.sizes[level]!!
+                drawPaint.isFakeBoldText = true
+                drawPaint.color = textColor
+            }
+
+            //check change line height
+            fm.ascent = defaultFontAscent
+            fm.descent = defaultFontDescent
+
+            span.chooseHeight(text, 0, text.length.inc(), 0, 0, fm)
+            //check top
+            assertEquals((defaultFontAscent - marginTop).toInt(), fm.ascent)
+            //check bottom
+            assertEquals(
+                ((defaultFontDescent - defaultFontAscent) * span.linePadding + marginBottom).toInt(),
+                fm.descent
+            )
+
+            assertEquals(fm.top, fm.ascent)
+            assertEquals(fm.bottom, fm.descent)
+
+            //check line draw
+            span.drawLeadingMargin(
+                canvas, paint, currentMargin, TEXT_DIRECTION_FIRST_STRONG,
+                lineTop, lineBase, lineBottom, text, 0, text.length,
+                true, layout
+            )
+
+            //check draw line for first, second level header
+            if (level == 1 || level == 2) {
+                val lh = (paint.descent() - paint.ascent()) * span.sizes[level]!!
+                val lineOffset = lineBase + lh * span.linePadding
+
+                verifyOrder {
+                    //check set line color
+                    paint.color = lineColor
+                    //check draw line under header
+                    canvas.drawLine(0f, lineOffset, canvasWidth.toFloat(), lineOffset, paint)
+                    //check restore paint color
+                    paint.color = defaultColor
+                }
+
+            }
+
+        }
+
+    }
+
+    @Test
+    fun draw_rule() {
+        //settings
+        val color = Color.RED
+        val width = 2.dpf()
+
+        val span = HorizontalRuleSpan(width, color)
+        text.setSpan(span, 0, text.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+
+        //check draw rule line
+        span.draw(
+            canvas,
+            text,
+            0,
+            text.length,
+            currentMargin.toFloat(),
+            lineTop,
+            lineBase,
+            lineBottom,
+            paint
+        )
+
+        //verify order call
+        verifyOrder {
+            //check set rule color
+            paint.color = color
+            //check draw line
+            canvas.drawLine(
+                0f,
+                (lineTop + lineBottom) / 2f,
+                canvasWidth.toFloat(),
+                (lineTop + lineBottom) / 2f,
+                paint
+            )
+            //check paint color restore
+            paint.color = defaultColor
+
+        }
+
+    }
+
+    @Test
+    fun draw_inline_code() {
+        //settings
+        val textColor = Color.RED
+        val bgColor = Color.GREEN
+        val cornerRadius = 8.dpf()
+        val padding = 8.dpf()
+        val measureText = 100f
+
+        //mocks
+        every { paint.measureText(any<String>(), any(), any()) } returns measureText
+
+        val fm = Paint.FontMetricsInt()
+
+        val span = InlineCodeSpan(textColor, bgColor, cornerRadius, padding)
+        text.setSpan(span, 0, text.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+
+        //check span size
+        val size = span.getSize(paint, text, 0, text.length, fm)
+        assertEquals((2 * padding + measureText).toInt(), size)
+
+        //check draw inline code
+        span.draw(
+            canvas,
+            text,
+            0,
+            text.length,
+            currentMargin.toFloat(),
+            lineTop,
+            lineBase,
+            lineBottom,
+            paint
+        )
+
+        //check call order
+        verifyOrder {
+            //check first set color to paint for background
+            paint.color = bgColor
+            //check draw background
+            canvas.drawRoundRect(
+                RectF(
+                    0f,
+                    lineTop.toFloat(),
+                    measureText + 2 * padding,
+                    lineBottom.toFloat()
+                ),
+                cornerRadius, cornerRadius,
+                paint
+            )
+
+            //check set text color
+            paint.color = textColor
+            //check draw text
+            canvas.drawText(
+                text, 0, text.length, currentMargin + padding,
+                lineBase.toFloat(),
+                paint
+            )
+
+            //check paint color restore
+            paint.color = defaultColor
+        }
+
+    }
+
+    @Test
+    fun draw_link() {
+        //settings
+        val gap = 8.dpf()
+        val textColor = Color.BLUE
+        val dotWidth = 4.dpf()
+//        Log.d("linklink", gap.toString())
+//        Log.d("linklink", textColor.toString())
+//        Log.d("linklink", dotWidth.toString())
+
+        //defaults
+        val fm = Paint.FontMetricsInt()
+
+        fm.ascent = defaultFontAscent
+        fm.descent = defaultFontDescent
+        val measureText = 100f
+
+        //mocks
+        every { paint.measureText(any<String>(), any(), any()) }.returns(measureText)
+
+        //spy
+        val linkDrawable = spyk(VectorDrawable()) {
+            every { draw(canvas) } answers {} //Unit do nothing if draw on canvas in spy object
+        }
+        val path = spyk(Path())
+
+        val span = IconLinkSpan(linkDrawable, gap, textColor, dotWidth)
+        text.setSpan(span, 0, text.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        //setter for mock path
+        span.path = path
+
+        //check measure size
+        val size = span.getSize(paint, text, 0, text.length, fm)
+        val iconSize = defaultFontDescent - defaultFontAscent
+        assertEquals((iconSize + gap + measureText).toInt(), size)
+
+        //check drawable set bounds
+        verify {
+            linkDrawable.setBounds(0, 0, iconSize, iconSize)
+        }
+
+        //check draw icon
+        span.draw(
+            canvas, text, 0, text.length, currentMargin.toFloat(),
+            lineTop, lineBase, lineBottom,
+            paint
+        )
+
+        //check path effect
+        verifyOrder {
+            paint.pathEffect = any()
+            paint.strokeWidth = 0f
+            paint.color = textColor
+        }
+
+        //check reset path and draw line under text
+        verifyOrder {
+            path.reset()
+            path.moveTo(currentMargin + iconSize + gap, lineBottom.toFloat())
+            path.lineTo(currentMargin + iconSize + gap + measureText, lineBottom.toFloat())
+            canvas.drawPath(path, paint)
+        }
+
+        //check draw icon
+        verifyOrder {
+            canvas.save()
+            canvas.translate(
+                currentMargin + gap / 2f,
+                lineBottom - linkDrawable.bounds.bottom.toFloat()
+            )
+            linkDrawable.draw(canvas)
+            canvas.restore()
+        }
+
+        //check draw text
+        verifyOrder {
+            //set text color
+            paint.color = textColor
+            //check draw text
+            canvas.drawText(
+                text, 0, text.length,
+                currentMargin + iconSize + gap,
+                lineBase.toFloat(),
+                paint
+            )
+            //check restore color
+            paint.color = defaultColor
+        }
+
+
+    }
+
+    fun under_line() {
+        //settings
+        val textColor = Color.BLUE
+        val dotWidth = 4.dpf()
+
+        //defaults
+        val fm = Paint.FontMetricsInt()
+        fm.ascent = defaultFontAscent
+        fm.descent = defaultFontDescent
+        val measureText = 100f
+
+        //mocks
+        every { paint.measureText(any<String>(), any(), any()) } returns measureText
+
+        val path = spyk(Path())
+
+        val span = UnderlineSpan(textColor, dotWidth)
+        span.path = path
+        text.setSpan(span, 0, text.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+
+
+        //check measure size
+        val size = span.getSize(paint, text, 0, text.length, fm)
+        assertEquals((measureText).toInt(), size)
+
+        //check draw icon
+        span.draw(
+            canvas, text, 0, text.length, currentMargin.toFloat(),
+            lineTop, lineBase, lineBottom,
+            paint
+        )
+        //check reset path and draw line under text
+        verifyOrder {
+            paint.pathEffect = any()
+            paint.color = textColor
+            paint.style = Paint.Style.STROKE
+            paint.strokeWidth = 0f
+
+            path.reset()
+            path.moveTo(currentMargin.toFloat(), lineBottom.toFloat())
+            path.lineTo(currentMargin + measureText, lineBottom.toFloat())
+            canvas.drawPath(path, paint)
+
+            //check restore color
+            paint.color = defaultColor
+            //check draw text
+            canvas.drawText(
+                text, 0, text.length,
+                currentMargin.toFloat(),
+                lineBase.toFloat(),
+                paint
+            )
+
+        }
+    }
+
+
+    private fun Int.dp() = (this * scaledDensity).toInt()
+    private fun Int.dpf() = this * scaledDensity
 }
 
-private fun ArticleState.asMap(): Map<String, Any?> = mapOf(
-    "isAuth" to isAuth,
-    "isLoadingContent" to isLoadingContent,
-    "isLoadingReviews" to isLoadingReviews,
-    "isLike" to isLike,
-    "isBookmark" to isBookmark,
-    "isShowMenu" to isShowMenu,
-    "isBigText" to isBigText,
-    "isDarkMode" to isDarkMode,
-    "isSearch" to isSearch,
-    "searchQuery" to searchQuery,
-    "searchResults" to searchResults,
-    "searchPosition" to searchPosition,
-    "shareLink" to shareLink,
-    "title" to title,
-    "category" to category,
-    "categoryIcon" to categoryIcon,
-    "date" to date,
-    "author" to author,
-    "poster" to poster,
-    "content" to content,
-    "reviews" to reviews,
-)
+
+
+
+

@@ -116,22 +116,22 @@ class UnitTest {
         assertEquals(expectedLink["links"], actualLink)
     }
 
-//    @Test
-//    fun parse_images() {
-//        val result = MarkdownParser.parse(imagesString)
-//        val actual = prepare<Element.Image>(result.elements)
-//        val actualLink = result.elements.spread()
-//            .filterIsInstance<Element.Image>()
-//            .map{it.url}
-//
-//        val actualAlts = result.elements.spread()
-//            .filterIsInstance<Element.Image>()
-//            .map{it.alt}
-//
-//        assertEquals(expectedImages["titles"], actual)
-//        assertEquals(expectedImages["alts"], actualAlts)
-//        assertEquals(expectedImages["links"], actualLink)
-//    }
+    @Test
+    fun parse_images() {
+        val result = MarkdownParser.parse(imagesString)
+        val actual = prepare<Element.Image>(result.elements)
+        val actualLink = result.elements.spread()
+            .filterIsInstance<Element.Image>()
+            .map{it.url}
+
+        val actualAlts = result.elements.spread()
+            .filterIsInstance<Element.Image>()
+            .map{it.alt}
+
+        assertEquals(expectedImages["titles"], actual)
+        assertEquals(expectedImages["alts"], actualAlts)
+        assertEquals(expectedImages["links"], actualLink)
+    }
 
     @Test
     fun parse_all() {
